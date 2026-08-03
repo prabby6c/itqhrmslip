@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Innovationtq Payroll — Salary Slip System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --surface: #ffffff;
+    --ink: #1a2733;
+    --ink-soft: #4a5b6c;
+    --ink-muted: #8a96a3;
+    --line: #d9d2c2;
+    --line-soft: #e8e3d6;
+    --accent: #1f4d4a;
+    --accent-soft: #e6f0ed;
+    --gold: #b08a3e;
+    --danger: #b3413a;
+    --success: #2e6b4a;
+    --shadow: 0 1px 2px rgba(26,39,51,.04), 0 8px 24px rgba(26,39,51,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .app { max-width: 1280px; margin: 0 auto; padding: 28px 32px 80px; }
+
+  /* --- Header --- */
+  .brand {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  .brand-mark {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .seal {
+    width: 52px; height: 52px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .brand-text h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 26px;
+    margin: 0;
+    letter-spacing: -0.3px;
+  }
+  .brand-text .sub {
+    font-size: 12px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 2px;
+  }
+  .company-block {
+    text-align: right;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 320px;
+  }
+  .company-block strong {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* --- Tabs --- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all .15s;
+    letter-spacing: 0.2px;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab-btn .count {
+    display: inline-block;
+    background: var(--line-soft);
+    color: var(--ink-soft);
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-left: 6px;
+    font-weight: 600;
+  }
+  .tab-btn.active .count {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* --- Sections --- */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .section-head h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    margin: 0;
+  }
+  .section-head p {
+    margin: 4px 0 0;
+    color: var(--ink-muted);
+    font-size: 13px;
+  }
+  .section-head .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* --- Buttons --- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all .15s;
+  }
+  .btn:hover { border-color: var(--ink-soft); }
+  .btn.primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .btn.primary:hover { background: #163834; border-color: #163834; }
+  .btn.danger { color: var(--danger); border-color: #e8c7c4; }
+  .btn.danger:hover { background: #fdf3f2; }
+  .btn.ghost { background: transparent; border-color: transparent; }
+  .btn.ghost:hover { background: var(--line-soft); }
+  .btn.sm { padding: 5px 10px; font-size: 12px; }
+
+  /* --- Cards --- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 16px; }
+
+  /* --- Forms --- */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .form-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .field input, .field select {
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--ink);
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .field input[readonly] {
+    background: var(--bg);
+    color: var(--ink-soft);
+  }
+  .field-hint {
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+  .form-section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 16px;
+    margin: 24px 0 12px;
+    color: var(--accent);
+    border-bottom: 1px solid var(--line-soft);
+    padding-bottom: 6px;
+  }
+  .form-section-title:first-child { margin-top: 0; }
+
+  /* --- Tables --- */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+    background: #faf8f2;
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 13px;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fbf9f3; }
+  .num { font-family: 'IBM Plex Mono', monospace; text-align: right; font-variant-numeric: tabular-nums; }
+  .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+  .empty {
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 13px;
+  }
+  .empty .big {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  /* --- Stats --- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  .stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 500;
+    margin-top: 4px;
+    color: var(--ink);
+  }
+  .stat-value.accent { color: var(--accent); }
+
+  /* --- Modal --- */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,39,51,0.4);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 100;
+    padding: 40px 20px;
+    overflow-y: auto;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 720px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-head h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    margin: 0;
+    font-size: 18px;
+  }
+  .modal-body { padding: 24px; }
+  .modal-foot {
+    padding: 16px 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    background: #faf8f2;
+  }
+  .x-btn {
+    background: none; border: none;
+    cursor: pointer; padding: 4px;
+    color: var(--ink-muted);
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  /* --- Generate slip layout --- */
+  .gen-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 800px) { .gen-grid { grid-template-columns: 1fr; } }
+
+  .pay-summary {
+    margin-top: 16px;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pay-summary .sum-row {
+    display: flex;
+    flex-direction: column;
+  }
+  .pay-summary .sum-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+  }
+  .pay-summary .sum-val {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .pay-summary .sum-val.big { font-size: 30px; color: #ffd478; }
+
+  /* --- Toast --- */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all .25s;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--danger); }
+  .toast.success { background: var(--success); }
+
+  /* --- Salary Slip Print Layout --- */
+  .slip-paper {
+    background: white;
+    color: #111;
+    padding: 36px 44px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    max-width: 820px;
+    margin: 0 auto;
+    font-size: 13px;
+  }
+  .slip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+  }
+  .slip-header .co-name {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+  .slip-header .co-addr {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin-top: 4px;
+  }
+  .slip-header .slip-title {
+    text-align: right;
+  }
+  .slip-header .slip-title .lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--ink-muted);
+  }
+  .slip-header .slip-title .month {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .slip-emp {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 16px;
+    font-size: 12.5px;
+  }
+  .slip-emp .row { display: flex; justify-content: space-between; gap: 8px; }
+  .slip-emp .lbl { color: var(--ink-muted); font-weight: 500; }
+  .slip-emp .val { font-weight: 500; text-align: right; }
+  .slip-tables {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .slip-tables > div + div { border-left: 1px solid var(--line); }
+  .slip-tables h4 {
+    margin: 0;
+    padding: 8px 14px;
+    background: #faf8f2;
+    border-bottom: 1px solid var(--line);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+  }
+  .slip-tables .lines { padding: 6px 14px; }
+  .slip-tables .line {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12.5px;
+    border-bottom: 1px dotted var(--line-soft);
+  }
+  .slip-tables .line:last-child { border-bottom: none; }
+  .slip-tables .line .amt {
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .slip-tables .total {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #faf8f2;
+    border-top: 1px solid var(--line);
+    font-weight: 600;
+    font-size: 12.5px;
+  }
+  .slip-net {
+    margin-top: 14px;
+    padding: 14px 18px;
+    background: var(--accent);
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .slip-net .lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.85;
+  }
+  .slip-net .amt {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #ffd478;
+    font-variant-numeric: tabular-nums;
+  }
+  .slip-words {
+    margin-top: 10px;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+  .slip-foot {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+  .slip-foot .sig {
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* --- Print --- */
+  @media print {
+    body { background: white; }
+    .app > .brand, .app > .tabs, .section-head, .actions, .toast, .modal-overlay { display: none !important; }
+    .section { display: block !important; }
+    .section:not(#tab-print) { display: none !important; }
+    .slip-paper {
+      border: none;
+      box-shadow: none;
+      padding: 20px 0;
+      max-width: 100%;
+    }
+    .card { border: none; box-shadow: none; padding: 0; }
+    @page { margin: 14mm; size: A4; }
+  }
+
+  /* --- Helpers --- */
+  .muted { color: var(--ink-muted); }
+  .right { text-align: right; }
+  .center { text-align: center; }
+  .stack-sm { display: flex; flex-direction: column; gap: 2px; }
+  .stack-sm .top { font-weight: 500; }
+  .stack-sm .bot { font-size: 11.5px; color: var(--ink-muted); }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .loading {
+    text-align: center; padding: 60px 20px;
+    color: var(--ink-muted);
+  }
+
+  /* --- Auth Screen --- */
+  .auth-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #1f4d4a 0%, #143531 100%);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+  }
+  .auth-card {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+  }
+  .auth-brand { text-align: center; margin-bottom: 28px; }
+  .auth-brand .seal { margin: 0 auto 14px; width: 56px; height: 56px; font-size: 24px; }
+  .auth-brand h1 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: 24px; margin: 0 0 4px; letter-spacing: -0.3px;
+  }
+  .auth-brand p { color: var(--ink-muted); font-size: 13px; margin: 0; }
+  .auth-tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .auth-tab {
+    flex: 1; background: none; border: none;
+    padding: 10px 12px; font-family: inherit; font-size: 13px; font-weight: 500;
+    color: var(--ink-muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+  }
+  .auth-tab:hover { color: var(--ink); }
+  .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .auth-form { display: flex; flex-direction: column; gap: 14px; }
+  .auth-form .field input { font-size: 15px; padding: 11px 14px; }
+  .auth-error {
+    margin-top: 14px; font-size: 12.5px; color: var(--danger);
+    text-align: center; min-height: 18px;
+  }
+  .auth-help {
+    margin-top: 18px; padding-top: 16px;
+    border-top: 1px solid var(--line-soft);
+    text-align: center; font-size: 12px; color: var(--ink-muted);
+  }
+
+  /* --- Session Bar --- */
+  .session-bar {
+    display: flex; justify-content: flex-end; align-items: center;
+    gap: 12px; padding: 6px 0 14px;
+    margin-bottom: 14px; border-bottom: 1px solid var(--line-soft);
+    font-size: 12.5px;
+  }
+  .session-info { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); }
+  .role-badge {
+    font-size: 10.5px; padding: 2px 9px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  /* --- Role-based visibility --- */
+  body:not(.role-admin):not(.role-employee) .app { display: none; }
+  body.role-employee .admin-only { display: none !important; }
+
+  /* --- QR Setup --- */
+  .qr-setup { text-align: center; }
+  .qr-setup h4 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: 18px; margin: 0 0 4px;
+  }
+  .qr-setup .emp-meta { color: var(--ink-muted); font-size: 13px; margin-bottom: 18px; }
+  .qr-container {
+    display: inline-block; padding: 14px;
+    background: white; border: 1px solid var(--line);
+    border-radius: 8px; margin-bottom: 16px;
+  }
+  .qr-container svg { display: block; width: 220px; height: 220px; }
+  .manual-key {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    background: var(--bg); padding: 10px 14px; border-radius: 6px;
+    letter-spacing: 1px; word-break: break-all;
+    border: 1px dashed var(--line); margin: 6px 0 16px;
+    user-select: all;
+  }
+  .qr-meta-label {
+    font-size: 11px; color: var(--ink-muted); margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .qr-steps {
+    text-align: left; background: #faf8f2; border-radius: 6px;
+    padding: 14px 18px; font-size: 12.5px;
+    color: var(--ink-soft); line-height: 1.85;
+  }
+  .qr-steps strong { color: var(--accent); }
+
+  #qr-print-area { display: none; }
+  @media print {
+    body.printing-setup .app, body.printing-setup .auth-screen,
+    body.printing-setup .modal-overlay { display: none !important; }
+    body.printing-setup #qr-print-area { display: block !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="seal">i</div>
+      <h1>Innovationtq Payroll</h1>
+      <p>Sign in to access your salary information</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-auth="employee" onclick="switchAuthTab('employee')">Employee</button>
+      <button class="auth-tab" data-auth="admin" onclick="switchAuthTab('admin')">Administrator</button>
+    </div>
+    <div class="auth-form" id="auth-form-employee">
+      <div class="field">
+        <label>Employee Code</label>
+        <input type="text" id="auth-emp-code" placeholder="e.g. ITQ001" autocomplete="username" style="text-transform:uppercase" onkeydown="if(event.key==='Enter')document.getElementById('auth-emp-otp').focus()" />
+      </div>
+      <div class="field">
+        <label>Authenticator Code</label>
+        <input type="text" id="auth-emp-otp" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')loginEmployee()" />
+        <div class="field-hint">Rolling 6-digit code from your Google Authenticator app</div>
+      </div>
+      <button class="btn primary" style="width:100%;justify-content:center;padding:11px;font-size:14px;" onclick="loginEmployee()">Sign In</button>
+    </div>
+    <div class="auth-form" id="auth-form-admin" style="display:none;">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="auth-admin-user" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('auth-admin-pass').focus()" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="auth-admin-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginAdmin()" />
+      </div>
+      <button class="btn primary" style="width:100%;justify-content:center;padding:11px;font-size:14px;" onclick="loginAdmin()">Sign In</button>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+    <div class="auth-help">
+      First time? Ask your administrator to share your authenticator setup QR code.
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- Brand Header -->
+  <header class="brand">
+    <div class="brand-mark">
+      <div class="seal">i</div>
+      <div class="brand-text">
+        <h1>Innovationtq Payroll</h1>
+        <div class="sub">Salary Slip Management System</div>
+      </div>
+    </div>
+    <div class="company-block">
+      <strong>Innovationtq IT Solutions Pvt Ltd</strong>
+      2nd Floor, SB Skyline Building<br>
+      Mogappair West Main Road<br>
+      Chennai – 600037
+    </div>
+  </header>
+
+  <!-- Session Bar -->
+  <div class="session-bar">
+    <div class="session-info">
+      <span class="role-badge" id="session-role">—</span>
+      <span>Signed in as <strong id="session-name">—</strong></span>
+    </div>
+    <button class="btn ghost" onclick="logout()" style="font-size:12px;padding:6px 12px;">Sign Out ↪</button>
+  </div>
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <button class="tab-btn admin-only active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn admin-only" data-tab="employees">Employees <span class="count" id="emp-count">0</span></button>
+    <button class="tab-btn admin-only" data-tab="generate">Generate Slip</button>
+    <button class="tab-btn" data-tab="slips" id="slips-tab">Saved Slips <span class="count" id="slip-count">0</span></button>
+    <button class="tab-btn" data-tab="print" id="print-tab" style="display:none;">Slip Preview</button>
+  </nav>
+
+  <!-- Dashboard -->
+  <section class="section active" id="tab-dashboard">
+    <div class="section-head">
+      <div>
+        <h2>Overview</h2>
+        <p>Manage employee master data and generate monthly salary slips.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="loadSampleData()">Load Sample Data</button>
+        <button class="btn primary" onclick="switchTab('generate')">+ Generate New Slip</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Active Employees</div><div class="stat-value" id="dash-emp">0</div></div>
+      <div class="stat"><div class="stat-label">Slips Generated</div><div class="stat-value accent" id="dash-slips">0</div></div>
+      <div class="stat"><div class="stat-label">Latest Pay Period</div><div class="stat-value" id="dash-month" style="font-size:18px;">—</div></div>
+      <div class="stat"><div class="stat-label">Total Net Disbursed (latest)</div><div class="stat-value accent" id="dash-net" style="font-size:18px;">₹ 0</div></div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-family:'Fraunces',serif;font-weight:500;font-size:16px;">Recent Slips</h3>
+      <div id="recent-slips"></div>
+    </div>
+  </section>
+
+  <!-- Employees -->
+  <section class="section" id="tab-employees">
+    <div class="section-head">
+      <div>
+        <h2>Employee Master</h2>
+        <p>Add, update, and remove employee records. These form the base for all salary slips.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="downloadEmployeesAsExcel()">↓ Export</button>
+        <button class="btn" onclick="openImportModal()">↑ Import from Excel</button>
+        <button class="btn primary" onclick="openEmpModal()">+ Add Employee</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Date of Joining</th>
+            <th>PAN</th>
+            <th>UAN</th>
+            <th>Bank A/c</th>
+            <th class="num">Basic</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="emp-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Generate Slip -->
+  <section class="section" id="tab-generate">
+    <div class="section-head">
+      <div>
+        <h2>Generate Salary Slip</h2>
+        <p>Select an employee and pay period, then enter month-specific amounts.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="form-section-title">Pay Period</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Employee</label>
+          <select id="g-emp" onchange="onSelectEmp()"></select>
+        </div>
+        <div class="field">
+          <label>Pay Month</label>
+          <select id="g-month"></select>
+        </div>
+        <div class="field">
+          <label>Pay Year</label>
+          <select id="g-year"></select>
+        </div>
+        <div class="field">
+          <label>Working Days</label>
+          <input type="number" id="g-workdays" value="30" min="1" max="31" onchange="recalc()" />
+        </div>
+        <div class="field">
+          <label>Paid Days</label>
+          <input type="number" id="g-paiddays" value="30" min="0" max="31" onchange="recalc()" />
+          <div class="field-hint">LOP days = Working − Paid</div>
+        </div>
+      </div>
+
+      <div class="form-section-title">Earnings</div>
+      <div class="form-grid">
+        <div class="field"><label>Basic Salary</label><input type="number" id="e-basic" oninput="recalc()" value="0" /></div>
+        <div class="field"><label>HRA</label><input type="number" id="e-hra" oninput="recalc()" value="0" /></div>
+        <div class="field"><label>Dearness Allowance (DA)</label><input type="number" id="e-da" oninput="recalc()" value="0" /></div>
+        <div class="field"><label>Travel Allowance</label><input type="number" id="e-ta" oninput="recalc()" value="0" /></div>
+        <div class="field"><label>Bonus</label><input type="number" id="e-bonus" oninput="recalc()" value="0" /></div>
+        <div class="field"><label>Incentives</label><input type="number" id="e-inc" oninput="recalc()" value="0" /></div>
+        <div class="field"><label>Leave Encashment</label><input type="number" id="e-leave" oninput="recalc()" value="0" /></div>
+        <div class="field"><label>Performance Award</label><input type="number" id="e-perf" oninput="recalc()" value="0" /></div>
+      </div>
+
+      <div class="form-section-title">Deductions</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>PF — Employee (12% of Basic)</label>
+          <input type="number" id="d-pfemp" oninput="recalc()" value="0" />
+          <div class="field-hint">Auto-suggested; editable</div>
+        </div>
+        <div class="field">
+          <label>ESI (0.75% of Gross)</label>
+          <input type="number" id="d-esi" oninput="recalc()" value="0" />
+          <div class="field-hint">Applies if gross ≤ ₹21,000</div>
+        </div>
+        <div class="field">
+          <label>LOP (Loss of Pay)</label>
+          <input type="number" id="d-lop" oninput="recalc()" value="0" readonly />
+          <div class="field-hint">Auto from paid days</div>
+        </div>
+        <div class="field">
+          <label>Professional Tax</label>
+          <input type="number" id="d-pt" oninput="recalc()" value="0" />
+        </div>
+        <div class="field">
+          <label>Other Deduction</label>
+          <input type="number" id="d-other" oninput="recalc()" value="0" />
+        </div>
+      </div>
+
+      <div class="form-section-title">Employer Contribution (Informational)</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>PF — Employer (12% of Basic)</label>
+          <input type="number" id="x-pfer" oninput="recalc()" value="0" />
+          <div class="field-hint">Not deducted from employee</div>
+        </div>
+      </div>
+
+      <div class="pay-summary">
+        <div class="sum-row"><span class="sum-label">Gross Earnings</span><span class="sum-val" id="s-gross">₹ 0</span></div>
+        <div class="sum-row"><span class="sum-label">Total Deductions</span><span class="sum-val" id="s-ded">₹ 0</span></div>
+        <div class="sum-row"><span class="sum-label">Net Pay</span><span class="sum-val big" id="s-net">₹ 0</span></div>
+      </div>
+
+      <div class="actions" style="margin-top: 20px; justify-content: flex-end;">
+        <button class="btn" onclick="resetGenForm()">Reset</button>
+        <button class="btn" onclick="previewSlip()">Preview</button>
+        <button class="btn primary" onclick="saveSlip()">Save Slip</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Saved Slips -->
+  <section class="section" id="tab-slips">
+    <div class="section-head">
+      <div>
+        <h2>Saved Salary Slips</h2>
+        <p>All generated slips. Click any record to view, print, or download.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Period</th>
+            <th>Employee</th>
+            <th>Code</th>
+            <th class="num">Gross</th>
+            <th class="num">Deductions</th>
+            <th class="num">Net Pay</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="slips-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Slip Preview -->
+  <section class="section" id="tab-print">
+    <div class="section-head">
+      <div>
+        <h2>Slip Preview</h2>
+        <p>Review and print the final salary slip.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="switchTab('slips')">← Back</button>
+        <button class="btn primary" onclick="window.print()">Print / Save PDF</button>
+      </div>
+    </div>
+    <div id="slip-render"></div>
+  </section>
+</div>
+
+<!-- Employee Modal -->
+<div class="modal-overlay" id="emp-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="emp-modal-title">Add Employee</h3>
+      <button class="x-btn" onclick="closeEmpModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section-title">Personal Details</div>
+      <div class="form-grid cols-2">
+        <div class="field"><label>Employee Code *</label><input type="text" id="m-code" placeholder="e.g. ITQ001" /></div>
+        <div class="field"><label>Full Name *</label><input type="text" id="m-name" placeholder="e.g. Ravi Kumar" /></div>
+        <div class="field"><label>Date of Joining</label><input type="date" id="m-doj" /></div>
+        <div class="field"><label>Designation</label><input type="text" id="m-desig" placeholder="e.g. Software Engineer" /></div>
+        <div class="field"><label>Department</label><input type="text" id="m-dept" placeholder="e.g. Engineering" /></div>
+        <div class="field"><label>Location</label><input type="text" id="m-loc" value="Chennai" /></div>
+      </div>
+
+      <div class="form-section-title">Statutory & Bank</div>
+      <div class="form-grid cols-2">
+        <div class="field"><label>PAN</label><input type="text" id="m-pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase" /></div>
+        <div class="field"><label>UAN</label><input type="text" id="m-uan" placeholder="12 digit UAN" /></div>
+        <div class="field"><label>PF Number</label><input type="text" id="m-pf" /></div>
+        <div class="field"><label>ESI Number</label><input type="text" id="m-esi" /></div>
+        <div class="field"><label>Bank Account No.</label><input type="text" id="m-acc" /></div>
+        <div class="field"><label>Bank Name & IFSC</label><input type="text" id="m-bank" placeholder="HDFC Bank — HDFC0001234" /></div>
+      </div>
+
+      <div class="form-section-title">Default Salary Structure (Monthly)</div>
+      <div class="form-grid cols-2">
+        <div class="field"><label>Basic Salary</label><input type="number" id="m-basic" value="0" /></div>
+        <div class="field"><label>HRA</label><input type="number" id="m-hra" value="0" /></div>
+        <div class="field"><label>Dearness Allowance</label><input type="number" id="m-da" value="0" /></div>
+        <div class="field"><label>Travel Allowance</label><input type="number" id="m-ta" value="0" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeEmpModal()">Cancel</button>
+      <button class="btn primary" onclick="saveEmp()">Save Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal" style="max-width: 920px;">
+    <div class="modal-head">
+      <h3>Bulk Import Employees</h3>
+      <button class="x-btn" onclick="closeImportModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-top:0;color:var(--ink-soft);font-size:13px;">
+        Upload an Excel file (<code>.xlsx</code>, <code>.xls</code>) or CSV with employee details. Use the template below to ensure correct column names — though common variations are auto-detected.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+        <button class="btn" onclick="downloadTemplate()">↓ Download Template</button>
+        <label class="btn primary" style="cursor:pointer;margin:0;">
+          📂 Choose File
+          <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(event)" />
+        </label>
+        <span id="import-filename" class="muted" style="font-size:12px;"></span>
+        <span id="import-summary" style="margin-left:auto;display:flex;gap:6px;"></span>
+      </div>
+      <div id="import-preview"></div>
+      <div style="margin-top:14px;font-size:11.5px;color:var(--ink-muted);background:#faf8f2;padding:12px 14px;border-radius:6px;border-left:3px solid var(--accent);line-height:1.6;">
+        <strong style="color:var(--accent);display:block;margin-bottom:4px;">Notes</strong>
+        • Column names are flexible — "Employee Code", "Code", "Emp Code" all work the same way<br>
+        • Supported date formats: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, or Excel native dates<br>
+        • Existing employees with matching codes will be <strong>updated</strong>; new codes are added<br>
+        • Required columns: <strong>Employee Code</strong> and <strong>Full Name</strong>. Everything else is optional<br>
+        • If you have separate Bank Name and IFSC columns, both will be merged automatically
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeImportModal()">Cancel</button>
+      <button class="btn primary" id="import-confirm-btn" onclick="confirmImport()" style="display:none">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR Authenticator Setup Modal -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal" style="max-width: 540px;">
+    <div class="modal-head">
+      <h3>Authenticator Setup</h3>
+      <button class="x-btn" onclick="closeQRModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-setup" id="qr-setup-content"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger" onclick="regenerateSecret()">Regenerate</button>
+      <button class="btn" onclick="printSetupSheet()">Print Setup Sheet</button>
+      <button class="btn primary" onclick="closeQRModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print area for setup sheet -->
+<div id="qr-print-area"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyC9zGtr2uBd4dbJVqcI2lKspY1H0QdiV0Q",
+  authDomain: "itqhrms.firebaseapp.com",
+  projectId: "itqhrms",
+  storageBucket: "itqhrms.firebasestorage.app",
+  messagingSenderId: "1051739679961",
+  appId: "1:1051739679961:web:e6405e8e5fc054c104e2c8",
+  measurementId: "G-VGR8S5KPF6"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const STORE_COLLECTION = 'payroll_store';
+const FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/10.13.2/';
+
+let FB = null;          // resolved firestore module + db handle
+let usingLocalOnly = false;
+
+// Firestore document IDs may not contain '/', so encode it. Our keys never do,
+// but this keeps imported/odd employee codes safe.
+const keyToId  = k => k.replace(/\//g, '__SLASH__');
+
+const dbReady = (async () => {
+  const appMod = await import(FIREBASE_SDK + 'firebase-app.js');
+  const fsMod  = await import(FIREBASE_SDK + 'firebase-firestore.js');
+  const app = appMod.initializeApp(FIREBASE_CONFIG);
+  // Persistent cache => the app still opens and works offline; queued writes
+  // flush automatically when the connection comes back.
+  let db;
+  try {
+    db = fsMod.initializeFirestore(app, {
+      localCache: fsMod.persistentLocalCache({ tabManager: fsMod.persistentMultipleTabManager() })
+    });
+  } catch (e) {
+    db = fsMod.getFirestore(app);
+  }
+  FB = Object.assign({ db }, fsMod);
+  return FB;
+})();
+
+// ---- localStorage fallback, only installed if Firebase cannot start ----
+function installLocalFallback() {
+  usingLocalOnly = true;
+  window.storage = {
+    async list(prefix) {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (!prefix || k.startsWith(prefix))) keys.push(k);
+      }
+      return { keys };
+    },
+    async get(key) {
+      const v = localStorage.getItem(key);
+      return v === null ? null : { value: v };
+    },
+    async set(key, value) { localStorage.setItem(key, value); return { ok: true }; },
+    async delete(key)     { localStorage.removeItem(key);     return { ok: true }; }
+  };
+}
+
+// ---- The storage API the rest of the app already calls ----
+window.storage = {
+  async list(prefix) {
+    const { db, collection, getDocs } = await dbReady;
+    const snap = await getDocs(collection(db, STORE_COLLECTION));
+    const keys = [];
+    snap.forEach(d => {
+      const k = (d.data() || {}).key || d.id;
+      if (!prefix || k.startsWith(prefix)) keys.push(k);
+    });
+    return { keys };
+  },
+  async get(key) {
+    const { db, doc, getDoc } = await dbReady;
+    const s = await getDoc(doc(db, STORE_COLLECTION, keyToId(key)));
+    return s.exists() ? { value: s.data().value } : null;
+  },
+  async set(key, value) {
+    const { db, doc, setDoc } = await dbReady;
+    await setDoc(doc(db, STORE_COLLECTION, keyToId(key)), {
+      key, value, updatedAt: Date.now()
+    });
+    return { ok: true };
+  },
+  async delete(key) {
+    const { db, doc, deleteDoc } = await dbReady;
+    await deleteDoc(doc(db, STORE_COLLECTION, keyToId(key)));
+    return { ok: true };
+  }
+};
+
+// ---- Live sync status pill (bottom-left) ----
+function syncStatus(state, text) {
+  let el = document.getElementById('sync-pill');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sync-pill';
+    el.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:9999;display:flex;' +
+      'align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:11.5px;' +
+      'font-weight:500;letter-spacing:.02em;background:var(--surface);border:1px solid var(--line);' +
+      'box-shadow:var(--shadow);color:var(--ink-soft);';
+    document.body.appendChild(el);
+  }
+  const colors = { live: 'var(--success)', off: 'var(--ink-muted)', error: 'var(--danger)' };
+  el.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:' +
+    (colors[state] || 'var(--ink-muted)') + '"></span>' + text;
+}
+
+// ---- Realtime listener: any change on any device lands here ----
+let unsubscribeSync = null;
+
+function applyDocKey(key, value) {
+  let obj;
+  try { obj = JSON.parse(value); } catch (e) { return; }
+  if (key.startsWith('emp:')) {
+    if (obj && obj.code) employees[obj.code] = obj;
+  } else if (key.startsWith('slip:')) {
+    if (obj && obj.code) slips[obj.code + '_' + obj.year + '_' + obj.month] = obj;
+  }
+}
+
+function removeDocKey(key) {
+  if (key.startsWith('emp:')) {
+    delete employees[key.slice(4)];
+  } else if (key.startsWith('slip:')) {
+    // slip:<CODE>_<YYYY>_<MM>  — split on the last two underscores (codes may contain '_')
+    const rest = key.slice(5);
+    const i2 = rest.lastIndexOf('_');
+    const i1 = rest.lastIndexOf('_', i2 - 1);
+    if (i1 < 0 || i2 < 0) return;
+    const code  = rest.slice(0, i1);
+    const year  = parseInt(rest.slice(i1 + 1, i2), 10);
+    const month = parseInt(rest.slice(i2 + 1), 10);
+    delete slips[code + '_' + year + '_' + month];
+  }
+}
+
+function startRealtimeSync() {
+  const { db, collection, onSnapshot } = FB;
+  if (unsubscribeSync) unsubscribeSync();
+  unsubscribeSync = onSnapshot(
+    collection(db, STORE_COLLECTION),
+    { includeMetadataChanges: false },
+    snap => {
+      snap.docChanges().forEach(ch => {
+        const data = ch.doc.data() || {};
+        const key  = data.key || ch.doc.id;
+        if (ch.type === 'removed') removeDocKey(key);
+        else applyDocKey(key, data.value);
+      });
+      renderAll();
+      // Keep the signed-in employee's header name fresh after a remote edit
+      if (currentUser && currentUser.role === 'employee') {
+        const emp = employees[currentUser.code];
+        if (emp) document.getElementById('session-name').textContent = emp.name || currentUser.code;
+      }
+      syncStatus('live', snap.metadata.fromCache ? 'Offline — changes queued' : 'Live sync');
+    },
+    err => {
+      console.warn('Sync error:', err);
+      syncStatus('error', 'Sync error — check rules/sign-in');
+    }
+  );
+}
+
+window.addEventListener('beforeunload', () => { if (unsubscribeSync) unsubscribeSync(); });
+
+// ========== State ==========
+let employees = {};   // { code: empObj }
+let slips = {};        // { 'CODE_YYYY_MM': slipObj }
+let editingCode = null;
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ========== Auth State ==========
+let currentUser = null;
+const ADMIN_CREDS = { user: 'admin', pass: 'Adm*123&' };
+
+function switchAuthTab(which) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.auth === which));
+  document.getElementById('auth-form-employee').style.display = which === 'employee' ? '' : 'none';
+  document.getElementById('auth-form-admin').style.display = which === 'admin' ? '' : 'none';
+  document.getElementById('auth-error').textContent = '';
+  setTimeout(() => {
+    const focusEl = which === 'employee' ? 'auth-emp-code' : 'auth-admin-user';
+    document.getElementById(focusEl).focus();
+  }, 50);
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 4500);
+}
+
+function loginAdmin() {
+  const user = document.getElementById('auth-admin-user').value.trim();
+  const pass = document.getElementById('auth-admin-pass').value;
+  if (user !== ADMIN_CREDS.user || pass !== ADMIN_CREDS.pass) {
+    showAuthError('Incorrect username or password');
+    return;
+  }
+  currentUser = { role: 'admin' };
+  document.getElementById('auth-admin-pass').value = '';
+  loginSuccess();
+}
+
+async function loginEmployee() {
+  const code = document.getElementById('auth-emp-code').value.trim().toUpperCase();
+  const otp = document.getElementById('auth-emp-otp').value.trim();
+  if (!code || !otp) { showAuthError('Enter your employee code and OTP'); return; }
+  if (!/^\d{6}$/.test(otp)) { showAuthError('OTP must be 6 digits'); return; }
+  const emp = employees[code];
+  if (!emp) { showAuthError('Employee code not found'); return; }
+  if (!emp.totpSecret) { showAuthError('Authenticator not set up. Contact your administrator.'); return; }
+  try {
+    const valid = await verifyTOTP(emp.totpSecret, otp);
+    if (!valid) { showAuthError('Invalid or expired authenticator code'); return; }
+  } catch(e) {
+    showAuthError('Authentication failed: ' + e.message); return;
+  }
+  currentUser = { role: 'employee', code };
+  document.getElementById('auth-emp-otp').value = '';
+  loginSuccess();
+}
+
+function loginSuccess() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.body.classList.toggle('role-admin', currentUser.role === 'admin');
+  document.body.classList.toggle('role-employee', currentUser.role === 'employee');
+
+  const slipsTab = document.getElementById('slips-tab');
+
+  if (currentUser.role === 'employee') {
+    const emp = employees[currentUser.code];
+    document.getElementById('session-name').textContent = emp?.name || currentUser.code;
+    document.getElementById('session-role').textContent = 'Employee';
+    document.querySelector('#tab-slips .section-head h2').textContent = 'My Salary Slips';
+    document.querySelector('#tab-slips .section-head p').textContent = `Salary slips for ${emp?.name || currentUser.code} (${currentUser.code}).`;
+    if (slipsTab.firstChild) slipsTab.firstChild.nodeValue = 'My Slips ';
+    switchTab('slips');
+  } else {
+    document.getElementById('session-name').textContent = 'Administrator';
+    document.getElementById('session-role').textContent = 'Admin';
+    document.querySelector('#tab-slips .section-head h2').textContent = 'Saved Salary Slips';
+    document.querySelector('#tab-slips .section-head p').textContent = 'All generated slips. Click any record to view, print, or download.';
+    if (slipsTab.firstChild) slipsTab.firstChild.nodeValue = 'Saved Slips ';
+    switchTab('dashboard');
+  }
+  renderAll();
+}
+
+function logout() {
+  if (currentUser && !confirm('Sign out?')) return;
+  currentUser = null;
+  document.body.classList.remove('role-admin');
+  document.body.classList.remove('role-employee');
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('auth-emp-code').value = '';
+  document.getElementById('auth-emp-otp').value = '';
+  document.getElementById('auth-admin-user').value = '';
+  document.getElementById('auth-admin-pass').value = '';
+  switchAuthTab('employee');
+}
+
+// ========== TOTP (RFC 6238 — Google Authenticator compatible) ==========
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+function base32Encode(bytes) {
+  let bits = 0, value = 0, result = '';
+  for (let i = 0; i < bytes.length; i++) {
+    value = (value << 8) | bytes[i]; bits += 8;
+    while (bits >= 5) { result += BASE32_ALPHABET[(value >>> (bits - 5)) & 31]; bits -= 5; }
+  }
+  if (bits > 0) result += BASE32_ALPHABET[(value << (5 - bits)) & 31];
+  return result;
+}
+
+function base32Decode(str) {
+  str = str.replace(/=+$/, '').toUpperCase().replace(/\s/g, '');
+  let bits = 0, value = 0;
+  const bytes = [];
+  for (let i = 0; i < str.length; i++) {
+    const idx = BASE32_ALPHABET.indexOf(str[i]);
+    if (idx < 0) continue;
+    value = (value << 5) | idx; bits += 5;
+    if (bits >= 8) { bytes.push((value >>> (bits - 8)) & 0xFF); bits -= 8; }
+  }
+  return new Uint8Array(bytes);
+}
+
+function generateTOTPSecret() {
+  const arr = new Uint8Array(20); // 160-bit
+  crypto.getRandomValues(arr);
+  return base32Encode(arr);
+}
+
+async function generateTOTPCode(secret, time) {
+  const counter = Math.floor((time !== undefined ? time : Date.now()) / 30000);
+  const counterBytes = new ArrayBuffer(8);
+  const view = new DataView(counterBytes);
+  view.setUint32(0, Math.floor(counter / 0x100000000));
+  view.setUint32(4, counter & 0xFFFFFFFF);
+  const keyBytes = base32Decode(secret);
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, counterBytes);
+  const sigArr = new Uint8Array(sig);
+  const offset = sigArr[19] & 0x0F;
+  const code = ((sigArr[offset] & 0x7F) << 24) | ((sigArr[offset+1] & 0xFF) << 16) |
+               ((sigArr[offset+2] & 0xFF) << 8) | (sigArr[offset+3] & 0xFF);
+  return String(code % 1000000).padStart(6, '0');
+}
+
+async function verifyTOTP(secret, code) {
+  const now = Date.now();
+  // Allow ±1 step (30s window) for clock drift
+  for (let i = -1; i <= 1; i++) {
+    const generated = await generateTOTPCode(secret, now + i * 30000);
+    if (generated === code) return true;
+  }
+  return false;
+}
+
+function makeOTPAuthURL(empCode, secret, empName) {
+  const issuer = 'Innovationtq';
+  const account = empName ? `${empCode} (${empName})` : empCode;
+  const label = encodeURIComponent(`${issuer}:${account}`);
+  return `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=6&period=30`;
+}
+
+// ========== QR Setup Modal ==========
+let currentQREmp = null;
+
+async function openQRModal(code) {
+  const emp = employees[code];
+  if (!emp) return;
+  currentQREmp = code;
+  if (!emp.totpSecret) {
+    emp.totpSecret = generateTOTPSecret();
+    await saveEmpToStore(emp);
+  }
+  renderQRSetup(emp);
+  document.getElementById('qr-modal').classList.add('active');
+}
+
+function closeQRModal() {
+  document.getElementById('qr-modal').classList.remove('active');
+  currentQREmp = null;
+}
+
+function renderQRSetup(emp) {
+  const url = makeOTPAuthURL(emp.code, emp.totpSecret, emp.name);
+  let qrHTML = '';
+  if (typeof qrcode !== 'undefined') {
+    const qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    qrHTML = qr.createSvgTag(5, 8);
+  } else {
+    qrHTML = `<div style="padding:40px;color:var(--danger)">QR library not loaded. Try refreshing the page.</div>`;
+  }
+  const formattedSecret = emp.totpSecret.match(/.{1,4}/g).join(' ');
+  document.getElementById('qr-setup-content').innerHTML = `
+    <h4>${emp.name}</h4>
+    <div class="emp-meta">${emp.code}${emp.desig ? ' · ' + emp.desig : ''}</div>
+    <div class="qr-container">${qrHTML}</div>
+    <div class="qr-meta-label">Manual entry key (if scanning fails)</div>
+    <div class="manual-key">${formattedSecret}</div>
+    <div class="qr-steps">
+      <strong>Setup Instructions</strong><br>
+      1. Install <strong>Google Authenticator</strong> on your phone (or any TOTP app like Microsoft Authenticator, Authy)<br>
+      2. Open the app and tap <strong>+</strong> → <strong>Scan a QR code</strong><br>
+      3. Point the camera at the QR code above<br>
+      4. The app will show a 6-digit code that refreshes every 30 seconds<br>
+      5. Use that rolling code as your password to sign in
+    </div>
+  `;
+}
+
+async function regenerateSecret() {
+  if (!currentQREmp) return;
+  if (!confirm('Generate a new authenticator secret?\n\nThe current Google Authenticator entry will stop working. The employee will need to re-scan the new QR code.')) return;
+  const emp = employees[currentQREmp];
+  emp.totpSecret = generateTOTPSecret();
+  await saveEmpToStore(emp);
+  renderQRSetup(emp);
+  toast('New secret generated — re-scan QR code', 'success');
+}
+
+function printSetupSheet() {
+  if (!currentQREmp) return;
+  const emp = employees[currentQREmp];
+  const url = makeOTPAuthURL(emp.code, emp.totpSecret, emp.name);
+  const qr = qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  const qrSVG = qr.createSvgTag(6, 10);
+  const formattedSecret = emp.totpSecret.match(/.{1,4}/g).join(' ');
+  document.getElementById('qr-print-area').innerHTML = `
+    <div style="max-width: 600px; margin: 30px auto; padding: 30px; font-family: 'IBM Plex Sans', sans-serif; color: #1a2733;">
+      <div style="border-bottom: 2px solid #1a2733; padding-bottom: 12px; margin-bottom: 20px;">
+        <div style="font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; color: #1f4d4a;">Innovationtq IT Solutions Pvt Ltd</div>
+        <div style="font-size: 11px; color: #4a5b6c; letter-spacing: 1px; text-transform: uppercase;">Authenticator Setup — Confidential</div>
+      </div>
+      <h3 style="font-family: 'Fraunces', serif; font-weight: 500; margin: 0 0 4px;">${emp.name}</h3>
+      <div style="color: #4a5b6c; margin-bottom: 18px;">${emp.code}${emp.desig ? ' · ' + emp.desig : ''}</div>
+      <p>Use this sheet to set up your salary portal authenticator.</p>
+      <div style="text-align: center; padding: 20px; border: 1px solid #d9d2c2; border-radius: 8px; background: white;">
+        ${qrSVG}
+      </div>
+      <div style="margin-top: 16px;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #8a96a3;">Manual entry key</div>
+        <div style="font-family: monospace; font-size: 14px; padding: 10px 14px; background: #f4f1ea; border-radius: 6px; letter-spacing: 1px; word-break: break-all; margin-top: 6px;">${formattedSecret}</div>
+      </div>
+      <ol style="line-height: 1.9; margin-top: 20px; padding-left: 22px;">
+        <li>Install Google Authenticator on your phone</li>
+        <li>Tap + → Scan QR code → point at the code above</li>
+        <li>To sign in, use code <strong>${emp.code}</strong> + the rolling 6-digit number</li>
+      </ol>
+      <p style="font-size: 11px; color: #b3413a; margin-top: 22px; padding: 8px 12px; background: #fdf3f2; border-radius: 6px;">
+        ⚠ Confidential. Do not share this sheet. The QR code grants access to your salary information.
+      </p>
+    </div>
+  `;
+  document.body.classList.add('printing-setup');
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => document.body.classList.remove('printing-setup'), 500);
+  }, 100);
+}
+
+// ========== Storage ==========
+async function loadAll() {
+  try {
+    await dbReady;                 // Firebase up
+    startRealtimeSync();           // first snapshot performs the initial load + renderAll()
+    return;
+  } catch (e) {
+    console.warn('Firebase unavailable, falling back to this device only:', e);
+    installLocalFallback();
+    syncStatus('off', 'Local only — not synced');
+  }
+
+  // ---- Fallback path: single-device localStorage load ----
+  try {
+    const empKeys = await window.storage.list('emp:');
+    for (const k of (empKeys.keys || [])) {
+      try {
+        const r = await window.storage.get(k);
+        if (r) {
+          const e = JSON.parse(r.value);
+          if (e && e.code) employees[e.code] = e;
+        }
+      } catch(e) {}
+    }
+    const slipKeys = await window.storage.list('slip:');
+    for (const k of (slipKeys.keys || [])) {
+      try {
+        const r = await window.storage.get(k);
+        if (r) {
+          const s = JSON.parse(r.value);
+          slips[`${s.code}_${s.year}_${s.month}`] = s;
+        }
+      } catch(e) {}
+    }
+  } catch(e) {
+    console.warn('Storage load issue:', e);
+  }
+  renderAll();
+}
+
+async function saveEmpToStore(emp) {
+  try { await window.storage.set('emp:' + emp.code, JSON.stringify(emp)); }
+  catch(e) { toast('Save failed: ' + e.message, 'error'); }
+}
+async function deleteEmpFromStore(code) {
+  try { await window.storage.delete('emp:' + code); } catch(e){}
+}
+async function saveSlipToStore(slip) {
+  const key = `slip:${slip.code}_${slip.year}_${String(slip.month).padStart(2,'0')}`;
+  try { await window.storage.set(key, JSON.stringify(slip)); }
+  catch(e) { toast('Save failed: ' + e.message, 'error'); }
+}
+async function deleteSlipFromStore(code, year, month) {
+  const key = `slip:${code}_${year}_${String(month).padStart(2,'0')}`;
+  try { await window.storage.delete(key); } catch(e){}
+}
+
+// ========== Tabs ==========
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+function switchTab(name) {
+  // Employees cannot access admin tabs
+  if (currentUser?.role === 'employee' && ['dashboard', 'employees', 'generate'].includes(name)) {
+    name = 'slips';
+  }
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'tab-' + name));
+  if (name === 'generate') populateGenSelectors();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ========== Toast ==========
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ========== Format ==========
+function fmt(n) {
+  if (n === null || n === undefined || isNaN(n)) n = 0;
+  return '₹ ' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ========== Number to Indian Words ==========
+function numToWords(num) {
+  num = Math.round(Number(num) || 0);
+  if (num === 0) return 'Zero Rupees Only';
+  const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function inWords(n) {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n/10)] + (n%10 ? ' ' + a[n%10] : '');
+    if (n < 1000) return a[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + inWords(n%100) : '');
+    return '';
+  }
+  let words = '';
+  const crore = Math.floor(num / 10000000); num %= 10000000;
+  const lakh = Math.floor(num / 100000); num %= 100000;
+  const thousand = Math.floor(num / 1000); num %= 1000;
+  const rest = num;
+  if (crore) words += inWords(crore) + ' Crore ';
+  if (lakh) words += inWords(lakh) + ' Lakh ';
+  if (thousand) words += inWords(thousand) + ' Thousand ';
+  if (rest) words += inWords(rest);
+  return words.trim() + ' Rupees Only';
+}
+
+// ========== Employee Modal ==========
+function openEmpModal(code) {
+  editingCode = code || null;
+  document.getElementById('emp-modal-title').textContent = code ? 'Edit Employee' : 'Add Employee';
+  ['code','name','doj','desig','dept','loc','pan','uan','pf','esi','acc','bank','basic','hra','da','ta'].forEach(f => {
+    document.getElementById('m-' + f).value = f === 'loc' ? 'Chennai' : '';
+  });
+  ['basic','hra','da','ta'].forEach(f => document.getElementById('m-' + f).value = 0);
+  if (code && employees[code]) {
+    const e = employees[code];
+    document.getElementById('m-code').value = e.code; document.getElementById('m-code').setAttribute('readonly','');
+    document.getElementById('m-name').value = e.name || '';
+    document.getElementById('m-doj').value = e.doj || '';
+    document.getElementById('m-desig').value = e.desig || '';
+    document.getElementById('m-dept').value = e.dept || '';
+    document.getElementById('m-loc').value = e.loc || 'Chennai';
+    document.getElementById('m-pan').value = e.pan || '';
+    document.getElementById('m-uan').value = e.uan || '';
+    document.getElementById('m-pf').value = e.pf || '';
+    document.getElementById('m-esi').value = e.esi || '';
+    document.getElementById('m-acc').value = e.acc || '';
+    document.getElementById('m-bank').value = e.bank || '';
+    document.getElementById('m-basic').value = e.basic || 0;
+    document.getElementById('m-hra').value = e.hra || 0;
+    document.getElementById('m-da').value = e.da || 0;
+    document.getElementById('m-ta').value = e.ta || 0;
+  } else {
+    document.getElementById('m-code').removeAttribute('readonly');
+  }
+  document.getElementById('emp-modal').classList.add('active');
+}
+function closeEmpModal() { document.getElementById('emp-modal').classList.remove('active'); editingCode = null; }
+
+async function saveEmp() {
+  const code = document.getElementById('m-code').value.trim().toUpperCase();
+  const name = document.getElementById('m-name').value.trim();
+  if (!code || !name) { toast('Code and Name are required', 'error'); return; }
+  if (!editingCode && employees[code]) { toast('Code already exists', 'error'); return; }
+  const existingEmp = editingCode ? employees[editingCode] : null;
+  const emp = {
+    code,
+    name,
+    doj: document.getElementById('m-doj').value,
+    desig: document.getElementById('m-desig').value.trim(),
+    dept: document.getElementById('m-dept').value.trim(),
+    loc: document.getElementById('m-loc').value.trim(),
+    pan: document.getElementById('m-pan').value.trim().toUpperCase(),
+    uan: document.getElementById('m-uan').value.trim(),
+    pf: document.getElementById('m-pf').value.trim(),
+    esi: document.getElementById('m-esi').value.trim(),
+    acc: document.getElementById('m-acc').value.trim(),
+    bank: document.getElementById('m-bank').value.trim(),
+    basic: Number(document.getElementById('m-basic').value) || 0,
+    hra: Number(document.getElementById('m-hra').value) || 0,
+    da: Number(document.getElementById('m-da').value) || 0,
+    ta: Number(document.getElementById('m-ta').value) || 0,
+    totpSecret: existingEmp?.totpSecret || generateTOTPSecret(),
+  };
+  employees[code] = emp;
+  await saveEmpToStore(emp);
+  closeEmpModal();
+  toast('Employee saved' + (existingEmp ? '' : ' — authenticator QR ready'), 'success');
+  renderAll();
+  if (!existingEmp) {
+    setTimeout(() => openQRModal(code), 300);
+  }
+}
+
+async function deleteEmp(code) {
+  if (!confirm('Delete employee ' + code + '? This will not remove existing slips.')) return;
+  delete employees[code];
+  await deleteEmpFromStore(code);
+  toast('Employee removed');
+  renderAll();
+}
+
+// ========== Render Lists ==========
+function renderEmployees() {
+  const tbody = document.getElementById('emp-tbody');
+  const list = Object.values(employees).sort((a,b) => a.code.localeCompare(b.code));
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="big">No employees yet</div>Add your first employee or load sample data to begin.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(e => `
+    <tr>
+      <td><strong>${e.code}</strong></td>
+      <td><div class="stack-sm"><span class="top">${e.name}</span><span class="bot">${e.desig || '—'}</span></div></td>
+      <td>${fmtDate(e.doj)}</td>
+      <td><code style="font-family:'IBM Plex Mono',monospace;font-size:12px">${e.pan || '—'}</code></td>
+      <td><code style="font-family:'IBM Plex Mono',monospace;font-size:12px">${e.uan || '—'}</code></td>
+      <td><code style="font-family:'IBM Plex Mono',monospace;font-size:12px">${e.acc || '—'}</code></td>
+      <td class="num">${fmt(e.basic)}</td>
+      <td><div class="row-actions">
+        <button class="btn sm" onclick="openQRModal('${e.code}')" title="Authenticator QR setup">${e.totpSecret ? '🔑 Auth' : '⚠ Setup Auth'}</button>
+        <button class="btn sm" onclick="openEmpModal('${e.code}')">Edit</button>
+        <button class="btn sm" onclick="quickGen('${e.code}')">Slip</button>
+        <button class="btn sm danger" onclick="deleteEmp('${e.code}')">Delete</button>
+      </div></td>
+    </tr>
+  `).join('');
+}
+
+function renderSlips() {
+  const tbody = document.getElementById('slips-tbody');
+  let list = Object.values(slips);
+  if (currentUser?.role === 'employee') {
+    list = list.filter(s => s.code === currentUser.code);
+  }
+  list.sort((a,b) => {
+    if (b.year !== a.year) return b.year - a.year;
+    if (b.month !== a.month) return b.month - a.month;
+    return a.code.localeCompare(b.code);
+  });
+  if (list.length === 0) {
+    const msg = currentUser?.role === 'employee'
+      ? 'No salary slips have been generated for you yet.'
+      : 'Generate a salary slip from the Generate Slip tab.';
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="big">No slips yet</div>${msg}</div></td></tr>`;
+    return;
+  }
+  const isAdmin = currentUser?.role === 'admin';
+  tbody.innerHTML = list.map(s => `
+    <tr>
+      <td><div class="stack-sm"><span class="top">${MONTHS[s.month-1]} ${s.year}</span></div></td>
+      <td>${s.empName}</td>
+      <td><strong>${s.code}</strong></td>
+      <td class="num">${fmt(s.gross)}</td>
+      <td class="num">${fmt(s.totalDed)}</td>
+      <td class="num"><strong>${fmt(s.net)}</strong></td>
+      <td><div class="row-actions">
+        <button class="btn sm primary" onclick="viewSlip('${s.code}', ${s.year}, ${s.month})">View / Print</button>
+        ${isAdmin ? `<button class="btn sm" onclick="editSlip('${s.code}', ${s.year}, ${s.month})">Edit</button>
+        <button class="btn sm danger" onclick="deleteSlip('${s.code}', ${s.year}, ${s.month})">Delete</button>` : ''}
+      </div></td>
+    </tr>
+  `).join('');
+}
+
+function renderDashboard() {
+  document.getElementById('dash-emp').textContent = Object.keys(employees).length;
+  document.getElementById('dash-slips').textContent = Object.keys(slips).length;
+  const list = Object.values(slips).sort((a,b) => {
+    if (b.year !== a.year) return b.year - a.year;
+    return b.month - a.month;
+  });
+  if (list.length > 0) {
+    const latestYear = list[0].year, latestMonth = list[0].month;
+    document.getElementById('dash-month').textContent = `${MONTHS[latestMonth-1]} ${latestYear}`;
+    const latest = list.filter(s => s.year === latestYear && s.month === latestMonth);
+    const total = latest.reduce((sum,s) => sum + s.net, 0);
+    document.getElementById('dash-net').textContent = fmt(total);
+    const recent = list.slice(0, 6);
+    document.getElementById('recent-slips').innerHTML = `
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr><th>Period</th><th>Employee</th><th class="num">Net Pay</th><th></th></tr></thead>
+        <tbody>${recent.map(s => `
+          <tr>
+            <td>${MONTHS[s.month-1]} ${s.year}</td>
+            <td>${s.empName} <span class="muted">(${s.code})</span></td>
+            <td class="num"><strong>${fmt(s.net)}</strong></td>
+            <td class="right"><button class="btn sm" onclick="viewSlip('${s.code}', ${s.year}, ${s.month})">View</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } else {
+    document.getElementById('dash-month').textContent = '—';
+    document.getElementById('dash-net').textContent = '₹ 0.00';
+    document.getElementById('recent-slips').innerHTML = `<div class="empty"><div class="big">No slips yet</div>Add employees and generate your first salary slip.</div>`;
+  }
+}
+
+function updateCounts() {
+  document.getElementById('emp-count').textContent = Object.keys(employees).length;
+  let slipList = Object.values(slips);
+  if (currentUser?.role === 'employee') {
+    slipList = slipList.filter(s => s.code === currentUser.code);
+  }
+  document.getElementById('slip-count').textContent = slipList.length;
+}
+
+function renderAll() { updateCounts(); renderDashboard(); renderEmployees(); renderSlips(); populateGenSelectors(); }
+
+// ========== Generate Slip ==========
+function populateGenSelectors() {
+  const empSel = document.getElementById('g-emp');
+  const list = Object.values(employees).sort((a,b)=>a.code.localeCompare(b.code));
+  const current = empSel.value;
+  empSel.innerHTML = '<option value="">— Select Employee —</option>' + list.map(e => `<option value="${e.code}">${e.code} — ${e.name}</option>`).join('');
+  if (current) empSel.value = current;
+
+  const monthSel = document.getElementById('g-month');
+  if (!monthSel.options.length) {
+    const now = new Date();
+    monthSel.innerHTML = MONTHS.map((m,i) => `<option value="${i+1}" ${i+1 === now.getMonth()+1 ? 'selected' : ''}>${m}</option>`).join('');
+  }
+  const yearSel = document.getElementById('g-year');
+  if (!yearSel.options.length) {
+    const cy = new Date().getFullYear();
+    let opts = '';
+    for (let y = cy + 1; y >= cy - 4; y--) opts += `<option value="${y}" ${y === cy ? 'selected' : ''}>${y}</option>`;
+    yearSel.innerHTML = opts;
+  }
+}
+
+function onSelectEmp() {
+  const code = document.getElementById('g-emp').value;
+  if (!code || !employees[code]) return;
+  const e = employees[code];
+  document.getElementById('e-basic').value = e.basic || 0;
+  document.getElementById('e-hra').value = e.hra || 0;
+  document.getElementById('e-da').value = e.da || 0;
+  document.getElementById('e-ta').value = e.ta || 0;
+  ['e-bonus','e-inc','e-leave','e-perf','d-pt','d-other'].forEach(id => document.getElementById(id).value = 0);
+  recalc();
+}
+
+function recalc() {
+  const basic = +document.getElementById('e-basic').value || 0;
+  const hra = +document.getElementById('e-hra').value || 0;
+  const da = +document.getElementById('e-da').value || 0;
+  const ta = +document.getElementById('e-ta').value || 0;
+  const bonus = +document.getElementById('e-bonus').value || 0;
+  const inc = +document.getElementById('e-inc').value || 0;
+  const leave = +document.getElementById('e-leave').value || 0;
+  const perf = +document.getElementById('e-perf').value || 0;
+
+  const workdays = +document.getElementById('g-workdays').value || 30;
+  const paiddays = Math.min(+document.getElementById('g-paiddays').value || workdays, workdays);
+  document.getElementById('g-paiddays').value = paiddays;
+  const lopDays = workdays - paiddays;
+  const fixedPart = basic + hra + da + ta;
+  const lop = workdays > 0 ? +(fixedPart * lopDays / workdays).toFixed(2) : 0;
+  document.getElementById('d-lop').value = lop;
+
+  const grossEarnings = basic + hra + da + ta + bonus + inc + leave + perf;
+
+  // Auto-suggest PF Employee = 12% of basic (capped at ₹15,000 basic per EPFO ceiling)
+  const pfBasicCapped = Math.min(basic, 15000);
+  const pfEmpAuto = +(pfBasicCapped * 0.12).toFixed(2);
+  const pfEmpField = document.getElementById('d-pfemp');
+  if (!pfEmpField.dataset.touched) pfEmpField.value = pfEmpAuto;
+
+  const pfErField = document.getElementById('x-pfer');
+  if (!pfErField.dataset.touched) pfErField.value = pfEmpAuto;
+
+  // ESI: 0.75% of gross if gross ≤ 21000
+  const esiAuto = grossEarnings <= 21000 ? +(grossEarnings * 0.0075).toFixed(2) : 0;
+  const esiField = document.getElementById('d-esi');
+  if (!esiField.dataset.touched) esiField.value = esiAuto;
+
+  const pfEmp = +pfEmpField.value || 0;
+  const esi = +esiField.value || 0;
+  const pt = +document.getElementById('d-pt').value || 0;
+  const other = +document.getElementById('d-other').value || 0;
+
+  const totalDed = pfEmp + esi + lop + pt + other;
+  const net = grossEarnings - totalDed;
+
+  document.getElementById('s-gross').textContent = fmt(grossEarnings);
+  document.getElementById('s-ded').textContent = fmt(totalDed);
+  document.getElementById('s-net').textContent = fmt(net);
+}
+
+['d-pfemp','d-esi','x-pfer'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => { e.target.dataset.touched = '1'; });
+});
+
+function resetGenForm() {
+  ['e-basic','e-hra','e-da','e-ta','e-bonus','e-inc','e-leave','e-perf','d-pfemp','d-esi','d-lop','d-pt','d-other','x-pfer'].forEach(id => {
+    const el = document.getElementById(id); el.value = 0; delete el.dataset.touched;
+  });
+  document.getElementById('g-emp').value = '';
+  document.getElementById('g-workdays').value = 30;
+  document.getElementById('g-paiddays').value = 30;
+  recalc();
+}
+
+function quickGen(code) {
+  switchTab('generate');
+  setTimeout(() => {
+    document.getElementById('g-emp').value = code;
+    onSelectEmp();
+  }, 50);
+}
+
+function buildSlipFromForm() {
+  const code = document.getElementById('g-emp').value;
+  if (!code || !employees[code]) { toast('Select an employee', 'error'); return null; }
+  const emp = employees[code];
+  const month = +document.getElementById('g-month').value;
+  const year = +document.getElementById('g-year').value;
+
+  const earnings = {
+    basic: +document.getElementById('e-basic').value || 0,
+    hra: +document.getElementById('e-hra').value || 0,
+    da: +document.getElementById('e-da').value || 0,
+    ta: +document.getElementById('e-ta').value || 0,
+    bonus: +document.getElementById('e-bonus').value || 0,
+    inc: +document.getElementById('e-inc').value || 0,
+    leave: +document.getElementById('e-leave').value || 0,
+    perf: +document.getElementById('e-perf').value || 0,
+  };
+  const deductions = {
+    pfEmp: +document.getElementById('d-pfemp').value || 0,
+    esi: +document.getElementById('d-esi').value || 0,
+    lop: +document.getElementById('d-lop').value || 0,
+    pt: +document.getElementById('d-pt').value || 0,
+    other: +document.getElementById('d-other').value || 0,
+  };
+  const pfEr = +document.getElementById('x-pfer').value || 0;
+  const workdays = +document.getElementById('g-workdays').value || 30;
+  const paiddays = +document.getElementById('g-paiddays').value || 30;
+
+  const gross = Object.values(earnings).reduce((a,b) => a+b, 0);
+  const totalDed = Object.values(deductions).reduce((a,b) => a+b, 0);
+  const net = gross - totalDed;
+
+  return {
+    code, empName: emp.name, empSnapshot: { ...emp },
+    month, year, workdays, paiddays,
+    earnings, deductions, pfEr,
+    gross, totalDed, net,
+    generatedAt: new Date().toISOString()
+  };
+}
+
+async function saveSlip() {
+  const slip = buildSlipFromForm();
+  if (!slip) return;
+  slips[`${slip.code}_${slip.year}_${slip.month}`] = slip;
+  await saveSlipToStore(slip);
+  toast(`Slip saved for ${slip.empName} — ${MONTHS[slip.month-1]} ${slip.year}`, 'success');
+  renderAll();
+  viewSlip(slip.code, slip.year, slip.month);
+}
+
+function previewSlip() {
+  const slip = buildSlipFromForm();
+  if (!slip) return;
+  renderSlipPaper(slip);
+  document.getElementById('print-tab').style.display = '';
+  switchTab('print');
+}
+
+function viewSlip(code, year, month) {
+  const slip = slips[`${code}_${year}_${month}`];
+  if (!slip) return;
+  renderSlipPaper(slip);
+  document.getElementById('print-tab').style.display = '';
+  switchTab('print');
+}
+
+function editSlip(code, year, month) {
+  const slip = slips[`${code}_${year}_${month}`];
+  if (!slip) return;
+  switchTab('generate');
+  setTimeout(() => {
+    document.getElementById('g-emp').value = code;
+    document.getElementById('g-month').value = month;
+    document.getElementById('g-year').value = year;
+    document.getElementById('g-workdays').value = slip.workdays || 30;
+    document.getElementById('g-paiddays').value = slip.paiddays || 30;
+    document.getElementById('e-basic').value = slip.earnings.basic;
+    document.getElementById('e-hra').value = slip.earnings.hra;
+    document.getElementById('e-da').value = slip.earnings.da;
+    document.getElementById('e-ta').value = slip.earnings.ta;
+    document.getElementById('e-bonus').value = slip.earnings.bonus;
+    document.getElementById('e-inc').value = slip.earnings.inc;
+    document.getElementById('e-leave').value = slip.earnings.leave;
+    document.getElementById('e-perf').value = slip.earnings.perf;
+    const pf = document.getElementById('d-pfemp'); pf.value = slip.deductions.pfEmp; pf.dataset.touched='1';
+    const esi = document.getElementById('d-esi'); esi.value = slip.deductions.esi; esi.dataset.touched='1';
+    const pfer = document.getElementById('x-pfer'); pfer.value = slip.pfEr; pfer.dataset.touched='1';
+    document.getElementById('d-pt').value = slip.deductions.pt;
+    document.getElementById('d-other').value = slip.deductions.other;
+    recalc();
+  }, 50);
+}
+
+async function deleteSlip(code, year, month) {
+  if (!confirm(`Delete slip for ${MONTHS[month-1]} ${year}?`)) return;
+  delete slips[`${code}_${year}_${month}`];
+  await deleteSlipFromStore(code, year, month);
+  toast('Slip deleted');
+  renderAll();
+}
+
+// ========== Render Slip Paper ==========
+function renderSlipPaper(s) {
+  const e = s.empSnapshot;
+  const earningsLines = [
+    ['Basic Salary', s.earnings.basic],
+    ['House Rent Allowance (HRA)', s.earnings.hra],
+    ['Dearness Allowance (DA)', s.earnings.da],
+    ['Travel Allowance', s.earnings.ta],
+    ['Bonus', s.earnings.bonus],
+    ['Incentives', s.earnings.inc],
+    ['Leave Encashment', s.earnings.leave],
+    ['Performance Award', s.earnings.perf],
+  ].filter(([_, v]) => v > 0);
+
+  const dedLines = [
+    ['PF — Employee Contribution', s.deductions.pfEmp],
+    ['ESI', s.deductions.esi],
+    ['Loss of Pay (LOP)', s.deductions.lop],
+    ['Professional Tax', s.deductions.pt],
+    ['Other Deduction', s.deductions.other],
+  ].filter(([_, v]) => v > 0);
+
+  document.getElementById('slip-render').innerHTML = `
+    <div class="slip-paper">
+      <div class="slip-header">
+        <div>
+          <div class="co-name">Innovationtq IT Solutions Pvt Ltd</div>
+          <div class="co-addr">2nd Floor, SB Skyline Building<br>Mogappair West Main Road, Chennai – 600037</div>
+        </div>
+        <div class="slip-title">
+          <div class="lbl">Salary Slip</div>
+          <div class="month">${MONTHS[s.month-1]} ${s.year}</div>
+        </div>
+      </div>
+
+      <div class="slip-emp">
+        <div class="row"><span class="lbl">Employee Name</span><span class="val">${e.name}</span></div>
+        <div class="row"><span class="lbl">Employee Code</span><span class="val">${e.code}</span></div>
+        <div class="row"><span class="lbl">Designation</span><span class="val">${e.desig || '—'}</span></div>
+        <div class="row"><span class="lbl">Department</span><span class="val">${e.dept || '—'}</span></div>
+        <div class="row"><span class="lbl">Date of Joining</span><span class="val">${fmtDate(e.doj)}</span></div>
+        <div class="row"><span class="lbl">Location</span><span class="val">${e.loc || '—'}</span></div>
+        <div class="row"><span class="lbl">PAN</span><span class="val">${e.pan || '—'}</span></div>
+        <div class="row"><span class="lbl">UAN</span><span class="val">${e.uan || '—'}</span></div>
+        <div class="row"><span class="lbl">PF No.</span><span class="val">${e.pf || '—'}</span></div>
+        <div class="row"><span class="lbl">ESI No.</span><span class="val">${e.esi || '—'}</span></div>
+        <div class="row"><span class="lbl">Bank A/c</span><span class="val">${e.acc || '—'}</span></div>
+        <div class="row"><span class="lbl">Bank / IFSC</span><span class="val">${e.bank || '—'}</span></div>
+        <div class="row"><span class="lbl">Working Days</span><span class="val">${s.workdays}</span></div>
+        <div class="row"><span class="lbl">Paid Days</span><span class="val">${s.paiddays}</span></div>
+      </div>
+
+      <div class="slip-tables">
+        <div>
+          <h4>Earnings</h4>
+          <div class="lines">
+            ${earningsLines.length ? earningsLines.map(([l,v]) => `<div class="line"><span>${l}</span><span class="amt">${fmt(v)}</span></div>`).join('') : '<div class="line muted">No earnings recorded</div>'}
+          </div>
+          <div class="total"><span>Gross Earnings</span><span>${fmt(s.gross)}</span></div>
+        </div>
+        <div>
+          <h4>Deductions</h4>
+          <div class="lines">
+            ${dedLines.length ? dedLines.map(([l,v]) => `<div class="line"><span>${l}</span><span class="amt">${fmt(v)}</span></div>`).join('') : '<div class="line muted">No deductions</div>'}
+          </div>
+          <div class="total"><span>Total Deductions</span><span>${fmt(s.totalDed)}</span></div>
+        </div>
+      </div>
+
+      <div class="slip-net">
+        <div><div class="lbl">Net Pay for ${MONTHS[s.month-1]} ${s.year}</div></div>
+        <div class="amt">${fmt(s.net)}</div>
+      </div>
+      <div class="slip-words">${numToWords(s.net)}</div>
+
+      ${s.pfEr > 0 ? `<div style="margin-top:12px;font-size:11.5px;color:#4a5b6c;border-top:1px dashed #d9d2c2;padding-top:10px;">
+        <strong>Employer's Contribution (informational, not deducted):</strong>
+        PF — Employer Share: <strong>${fmt(s.pfEr)}</strong>
+      </div>` : ''}
+
+      <div class="slip-foot">
+        <div>Generated on ${new Date(s.generatedAt).toLocaleDateString('en-IN')}</div>
+        <div class="sig">This is a system-generated salary slip and does not require a signature.</div>
+        <div>Innovationtq IT Solutions Pvt Ltd</div>
+      </div>
+    </div>
+  `;
+}
+
+// ========== Sample Data ==========
+async function loadSampleData() {
+  if (!confirm('This will add 10 sample employees and a few sample slips. Continue?')) return;
+  const samples = [
+    { code:'ITQ001', name:'Aravind Srinivasan', doj:'2021-06-15', desig:'Senior Software Engineer', dept:'Engineering', loc:'Chennai', pan:'ABCPS1234A', uan:'100123456789', pf:'TN/CHN/0001/001', esi:'1234567890', acc:'50100123456789', bank:'HDFC Bank — HDFC0001234', basic:35000, hra:14000, da:3500, ta:2000 },
+    { code:'ITQ002', name:'Priya Lakshmi', doj:'2022-03-01', desig:'UI/UX Designer', dept:'Design', loc:'Chennai', pan:'BCDPL2345B', uan:'100234567890', pf:'TN/CHN/0001/002', esi:'2345678901', acc:'50100234567890', bank:'ICICI Bank — ICIC0002345', basic:28000, hra:11200, da:2800, ta:2000 },
+    { code:'ITQ003', name:'Karthik Raja', doj:'2020-11-20', desig:'Tech Lead', dept:'Engineering', loc:'Chennai', pan:'CDEKR3456C', uan:'100345678901', pf:'TN/CHN/0001/003', esi:'', acc:'50100345678901', bank:'SBI — SBIN0003456', basic:55000, hra:22000, da:5500, ta:2500 },
+    { code:'ITQ004', name:'Divya Bharathi', doj:'2023-01-10', desig:'QA Engineer', dept:'Quality', loc:'Chennai', pan:'DEFDB4567D', uan:'100456789012', pf:'TN/CHN/0001/004', esi:'4567890123', acc:'50100456789012', bank:'Axis Bank — UTIB0004567', basic:22000, hra:8800, da:2200, ta:1800 },
+    { code:'ITQ005', name:'Manoj Kumar', doj:'2019-08-05', desig:'DevOps Engineer', dept:'Infrastructure', loc:'Chennai', pan:'EFGMK5678E', uan:'100567890123', pf:'TN/CHN/0001/005', esi:'', acc:'50100567890123', bank:'HDFC Bank — HDFC0001234', basic:42000, hra:16800, da:4200, ta:2200 },
+    { code:'ITQ006', name:'Sangeetha Rao', doj:'2022-09-12', desig:'Business Analyst', dept:'Product', loc:'Chennai', pan:'FGHSR6789F', uan:'100678901234', pf:'TN/CHN/0001/006', esi:'6789012345', acc:'50100678901234', bank:'Kotak Bank — KKBK0006789', basic:30000, hra:12000, da:3000, ta:2000 },
+    { code:'ITQ007', name:'Vignesh Murali', doj:'2024-02-20', desig:'Junior Developer', dept:'Engineering', loc:'Chennai', pan:'GHIVM7890G', uan:'100789012345', pf:'TN/CHN/0001/007', esi:'7890123456', acc:'50100789012345', bank:'IDBI Bank — IBKL0007890', basic:18000, hra:7200, da:1800, ta:1500 },
+    { code:'ITQ008', name:'Lavanya Krishnan', doj:'2021-12-01', desig:'HR Manager', dept:'Human Resources', loc:'Chennai', pan:'HIJLK8901H', uan:'100890123456', pf:'TN/CHN/0001/008', esi:'', acc:'50100890123456', bank:'Indian Bank — IDIB0008901', basic:38000, hra:15200, da:3800, ta:2200 },
+    { code:'ITQ009', name:'Ramesh Babu', doj:'2018-04-10', desig:'Project Manager', dept:'Engineering', loc:'Chennai', pan:'IJKRB9012I', uan:'100901234567', pf:'TN/CHN/0001/009', esi:'', acc:'50100901234567', bank:'HDFC Bank — HDFC0001234', basic:62000, hra:24800, da:6200, ta:2500 },
+    { code:'ITQ010', name:'Anitha Selvi', doj:'2023-07-18', desig:'Content Writer', dept:'Marketing', loc:'Chennai', pan:'JKLAS0123J', uan:'101012345678', pf:'TN/CHN/0001/010', esi:'1023456789', acc:'50101012345678', bank:'Canara Bank — CNRB0001023', basic:24000, hra:9600, da:2400, ta:1800 },
+  ];
+  for (const e of samples) {
+    e.totpSecret = generateTOTPSecret();
+    employees[e.code] = e;
+    await saveEmpToStore(e);
+  }
+  toast('Sample data loaded — authenticators auto-configured', 'success');
+  renderAll();
+}
+
+// ========== Bulk Import / Export ==========
+let parsedImportRows = [];
+
+const HEADER_MAP = {
+  // Code
+  'employeecode':'code','code':'code','empcode':'code','employeeid':'code','empid':'code',
+  // Name
+  'fullname':'name','name':'name','employeename':'name','empname':'name',
+  // DOJ
+  'dateofjoining':'doj','doj':'doj','joiningdate':'doj','joindate':'doj','dateofjoin':'doj',
+  // Designation
+  'designation':'desig','desig':'desig','role':'desig','title':'desig','jobtitle':'desig',
+  // Department
+  'department':'dept','dept':'dept',
+  // Location
+  'location':'loc','loc':'loc','city':'loc','workinglocation':'loc','workingcity':'loc',
+  // PAN
+  'pan':'pan','pannumber':'pan','panno':'pan','pancard':'pan','pancardno':'pan',
+  // UAN
+  'uan':'uan','uannumber':'uan','uanno':'uan',
+  // PF
+  'pfnumber':'pf','pfno':'pf','pf':'pf','pfaccount':'pf','pfaccountno':'pf','epfnumber':'pf','epfno':'pf',
+  // ESI
+  'esinumber':'esi','esino':'esi','esi':'esi','esiaccount':'esi',
+  // Account
+  'bankaccount':'acc','bankaccountno':'acc','bankaccountnumber':'acc','accountno':'acc','accno':'acc','accountnumber':'acc','account':'acc',
+  // Bank Name + IFSC
+  'banknameifsc':'bank','bank':'bank','bankname':'bank','bankifsc':'bank','bankdetails':'bank',
+  'ifsc':'_ifsc','ifsccode':'_ifsc','bankifsccode':'_ifsc',
+  // Salary
+  'basic':'basic','basicsalary':'basic','basicpay':'basic',
+  'hra':'hra','houserentallowance':'hra','houserent':'hra',
+  'da':'da','dearnessallowance':'da',
+  'ta':'ta','travelallowance':'ta','transportallowance':'ta','conveyance':'ta','conveyanceallowance':'ta',
+};
+
+function normalizeHeader(h) {
+  return String(h || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function parseImportDate(v) {
+  if (v === null || v === undefined || v === '') return '';
+  if (v instanceof Date && !isNaN(v)) {
+    const y = v.getFullYear(), m = String(v.getMonth()+1).padStart(2,'0'), d = String(v.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  const s = String(v).trim();
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) {
+    const [y,m,d] = s.split('-');
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  const m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  if (m) {
+    let [_, d, mo, y] = m;
+    if (y.length === 2) y = '20' + y;
+    return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  const dt = new Date(s);
+  if (!isNaN(dt)) {
+    const y = dt.getFullYear(), mo = String(dt.getMonth()+1).padStart(2,'0'), d = String(dt.getDate()).padStart(2,'0');
+    return `${y}-${mo}-${d}`;
+  }
+  return s;
+}
+
+function parseImportNumber(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  const s = String(v).replace(/[^0-9.\-]/g, '');
+  const n = Number(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function downloadTemplate() {
+  if (typeof XLSX === 'undefined') { toast('Excel library not loaded yet — try again', 'error'); return; }
+  const headers = [
+    'Employee Code','Full Name','Date of Joining','Designation','Department','Location',
+    'PAN','UAN','PF Number','ESI Number','Bank Account No','Bank Name & IFSC',
+    'Basic','HRA','DA','TA'
+  ];
+  const samples = [
+    ['ITQ001','Aravind Srinivasan','2021-06-15','Senior Software Engineer','Engineering','Chennai','ABCPS1234A','100123456789','TN/CHN/0001/001','1234567890','50100123456789','HDFC Bank — HDFC0001234',35000,14000,3500,2000],
+    ['ITQ002','Priya Lakshmi','2022-03-01','UI/UX Designer','Design','Chennai','BCDPL2345B','100234567890','TN/CHN/0001/002','2345678901','50100234567890','ICICI Bank — ICIC0002345',28000,11200,2800,2000],
+    ['ITQ003','Karthik Raja','2020-11-20','Tech Lead','Engineering','Chennai','CDEKR3456C','100345678901','TN/CHN/0001/003','','50100345678901','SBI — SBIN0003456',55000,22000,5500,2500],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...samples]);
+  ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 2, 18) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+  XLSX.writeFile(wb, 'Innovationtq_Employee_Import_Template.xlsx');
+  toast('Template downloaded', 'success');
+}
+
+function downloadEmployeesAsExcel() {
+  if (typeof XLSX === 'undefined') { toast('Excel library not loaded yet', 'error'); return; }
+  const list = Object.values(employees).sort((a,b) => a.code.localeCompare(b.code));
+  if (!list.length) { toast('No employees to export', 'error'); return; }
+  const headers = ['Employee Code','Full Name','Date of Joining','Designation','Department','Location','PAN','UAN','PF Number','ESI Number','Bank Account No','Bank Name & IFSC','Basic','HRA','DA','TA'];
+  const data = list.map(e => [e.code, e.name, e.doj || '', e.desig || '', e.dept || '', e.loc || '', e.pan || '', e.uan || '', e.pf || '', e.esi || '', e.acc || '', e.bank || '', e.basic || 0, e.hra || 0, e.da || 0, e.ta || 0]);
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+  ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 2, 18) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Innovationtq_Employees_${today}.xlsx`);
+  toast(`Exported ${list.length} employees`, 'success');
+}
+
+function openImportModal() {
+  parsedImportRows = [];
+  document.getElementById('import-modal').classList.add('active');
+  document.getElementById('import-preview').innerHTML = '';
+  document.getElementById('import-file').value = '';
+  document.getElementById('import-summary').innerHTML = '';
+  document.getElementById('import-filename').textContent = '';
+  document.getElementById('import-confirm-btn').style.display = 'none';
+}
+function closeImportModal() { document.getElementById('import-modal').classList.remove('active'); }
+
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === 'undefined') { toast('Excel library still loading — try again in a moment', 'error'); return; }
+  document.getElementById('import-filename').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+      processImportRows(rows);
+    } catch (err) {
+      toast('Could not read file: ' + err.message, 'error');
+      document.getElementById('import-preview').innerHTML = `<div class="empty"><div class="big">Failed to parse file</div>${err.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processImportRows(rows) {
+  const preview = document.getElementById('import-preview');
+  if (!rows.length) {
+    preview.innerHTML = '<div class="empty"><div class="big">File appears empty</div>No data rows found in the first sheet.</div>';
+    return;
+  }
+  const headers = Object.keys(rows[0]);
+  const headerToField = {};
+  const unmapped = [];
+  headers.forEach(h => {
+    const norm = normalizeHeader(h);
+    if (HEADER_MAP[norm]) headerToField[h] = HEADER_MAP[norm];
+    else if (norm) unmapped.push(h);
+  });
+
+  parsedImportRows = rows.map((row, idx) => {
+    const obj = { _row: idx + 2, _errors: [], _status: 'new' };
+    for (const h of headers) {
+      const field = headerToField[h];
+      if (!field) continue;
+      const raw = row[h];
+      if (field === 'doj') obj.doj = parseImportDate(raw);
+      else if (['basic','hra','da','ta'].includes(field)) obj[field] = parseImportNumber(raw);
+      else obj[field] = String(raw || '').trim();
+    }
+    // Merge separate IFSC into bank
+    if (obj._ifsc) {
+      obj.bank = obj.bank ? `${obj.bank} — ${obj._ifsc}` : obj._ifsc;
+      delete obj._ifsc;
+    }
+    if (obj.code) obj.code = obj.code.toUpperCase();
+    if (obj.pan) obj.pan = obj.pan.toUpperCase();
+
+    // Validate
+    if (!obj.code) obj._errors.push('Code missing');
+    if (!obj.name) obj._errors.push('Name missing');
+    if (obj.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(obj.pan)) obj._errors.push('Invalid PAN format');
+    if (obj.uan && !/^\d{8,12}$/.test(obj.uan.replace(/\s/g,''))) obj._errors.push('UAN should be 8–12 digits');
+
+    if (obj._errors.length) obj._status = 'error';
+    else if (obj.code && employees[obj.code]) obj._status = 'update';
+
+    return obj;
+  });
+
+  renderImportPreview(unmapped);
+}
+
+function renderImportPreview(unmapped) {
+  const newCount = parsedImportRows.filter(r => r._status === 'new').length;
+  const updateCount = parsedImportRows.filter(r => r._status === 'update').length;
+  const errorCount = parsedImportRows.filter(r => r._status === 'error').length;
+
+  const pillStyles = {
+    new: 'background:#e6f0ed;color:#1f4d4a',
+    update: 'background:#fff4d9;color:#8a6d1d',
+    error: 'background:#fdf3f2;color:#b3413a',
+  };
+
+  document.getElementById('import-summary').innerHTML = `
+    <span class="pill" style="${pillStyles.new}">${newCount} new</span>
+    <span class="pill" style="${pillStyles.update}">${updateCount} update</span>
+    <span class="pill" style="${pillStyles.error}">${errorCount} error</span>
+  `;
+
+  const unmappedNote = unmapped && unmapped.length ?
+    `<div style="margin-bottom:8px;padding:8px 12px;background:#fff8e1;border-radius:6px;font-size:11.5px;color:#8a6d1d;">
+      <strong>Unmapped columns ignored:</strong> ${unmapped.map(u => `<code>${u}</code>`).join(', ')}
+     </div>` : '';
+
+  document.getElementById('import-preview').innerHTML = `
+    ${unmappedNote}
+    <div style="max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:6px;">
+      <table>
+        <thead><tr>
+          <th style="width:50px;">Row</th>
+          <th style="width:80px;">Status</th>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Designation</th>
+          <th class="num">Basic</th>
+          <th>Notes</th>
+        </tr></thead>
+        <tbody>
+          ${parsedImportRows.map(r => `
+            <tr style="${r._status==='error'?'background:#fdf3f2':''}">
+              <td class="muted">${r._row}</td>
+              <td><span class="pill" style="${pillStyles[r._status]}">${r._status}</span></td>
+              <td><strong>${r.code || '—'}</strong></td>
+              <td>${r.name || '—'}</td>
+              <td>${r.desig || '—'}</td>
+              <td class="num">${r.basic ? fmt(r.basic) : '—'}</td>
+              <td style="font-size:11.5px;color:${r._errors.length?'var(--danger)':'var(--ink-muted)'}">${r._errors.join(', ') || (r._status==='update'?'will overwrite existing':'ready to add')}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  const btn = document.getElementById('import-confirm-btn');
+  if (newCount + updateCount > 0) {
+    btn.style.display = '';
+    btn.textContent = `Import ${newCount + updateCount} ${newCount+updateCount===1?'Employee':'Employees'}`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+async function confirmImport() {
+  const valid = parsedImportRows.filter(r => r._status !== 'error');
+  if (!valid.length) { toast('Nothing to import', 'error'); return; }
+  let imported = 0, updated = 0;
+  for (const r of valid) {
+    const existing = employees[r.code] || {};
+    const isUpdate = !!employees[r.code];
+    const emp = {
+      code: r.code,
+      name: r.name,
+      doj: r.doj || existing.doj || '',
+      desig: r.desig || existing.desig || '',
+      dept: r.dept || existing.dept || '',
+      loc: r.loc || existing.loc || 'Chennai',
+      pan: r.pan || existing.pan || '',
+      uan: r.uan || existing.uan || '',
+      pf: r.pf || existing.pf || '',
+      esi: r.esi || existing.esi || '',
+      acc: r.acc || existing.acc || '',
+      bank: r.bank || existing.bank || '',
+      basic: r.basic || existing.basic || 0,
+      hra: r.hra || existing.hra || 0,
+      da: r.da || existing.da || 0,
+      ta: r.ta || existing.ta || 0,
+      totpSecret: existing.totpSecret || generateTOTPSecret(),
+    };
+    employees[emp.code] = emp;
+    await saveEmpToStore(emp);
+    if (isUpdate) updated++; else imported++;
+  }
+  closeImportModal();
+  toast(`${imported} added${updated ? `, ${updated} updated` : ''}`, 'success');
+  renderAll();
+}
+
+// ========== Init ==========
+window.addEventListener('DOMContentLoaded', loadAll);
+</script>
+</body>
+</html>
